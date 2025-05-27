@@ -3,6 +3,7 @@ const KPI_VIEW_AREA_ITEM_NAME = 'KPIs';
 const REQUEST_LIST_AREA_ITEM_NAME = 'Requests';
 const HEADER_AREA_ITEM_NAME = 'Header';
 const SEARCH_BAR_CONTROL_NAME = "Auto-Complete";
+const CARDS_ACTIVATION_NAME = "RenderCards";
 
 const MOBILE_HEADER_HEIGHT = 100;
 
@@ -114,26 +115,52 @@ let rowObs   = null;
 function log(...a){ if (DEBUG) console.log('[Cards]', ...a); }
 
 /*──────────────────────  INITIAL WAIT  ─────────────────────*/
-function initWhenReady(){
-  const table   = document.querySelector(GRID);
-  const headers = document.querySelectorAll(
-       '.grid-column-header-table .grid-column-header-text');
+function initWhenReady () {
 
-  if (table && headers.length){
-      colNames = [...headers].map(h => h.textContent.trim());
-      log('Grid detected with headers:', colNames);
-      buildCards();
-      attachObserver();
+    /* 1️⃣  locate the grid root DIV first – it owns the name="" attr
+           (we walk “up” from the content-table in case there are many grids) */
+    const $gridRoot = $(GRID).closest('.grid');
 
-      /* 🟢 hide visually WITHOUT display:none */
-      $(GRID).css({position:'absolute', left:'-9999px', top:'-9999px',
-                   height:0, width:0, overflow:'hidden'});
+    /* 2️⃣  If there is no grid – or the view-name doesn’t contain
+           our activation token – try again in 100 ms.                 */
+    if (!$gridRoot.length || !cardsEnabled($gridRoot)) {
+        // Nothing for us to do on this tick
+        setTimeout(initWhenReady, 100);
+        return;
+    }
 
-        /* hide the column-header bar as well */
-        $('.grid-column-headers').css({position:'absolute', left:'-9999px', top:'-9999px',
-            height:0, width:0, overflow:'hidden'});
+    /* 3️⃣  From here on we KNOW the grid should render as cards */
+    const table   = $gridRoot.find(GRID).get(0);
+    const headers = $gridRoot.find('.grid-column-header-table .grid-column-header-text');
 
-  } else { setTimeout(initWhenReady, 100); }
+    if (table && headers.length) {
+        colNames = headers.map((_, h) => $(h).text().trim()).get();
+        log('Grid detected with headers:', colNames);
+
+        buildCards();        // ← your existing routine
+        attachObserver();    // ← attaches the MutationObserver etc.
+
+        /* 🟢 hide the OEM grid without killing its event handlers */
+        $gridRoot.find(GRID).css({
+            position: 'absolute', left: '-9999px', top: '-9999px',
+            height: 0, width: 0, overflow: 'hidden'
+        });
+
+        /* …and the (now useless) column header bar */
+        $gridRoot.find('.grid-column-headers').css({
+            position: 'absolute', left: '-9999px', top: '-9999px',
+            height: 0, width: 0, overflow: 'hidden'
+        });
+
+    } else {
+        // Grid not fully rendered yet – wait a little longer
+        setTimeout(initWhenReady, 100);
+    }
+}
+
+function cardsEnabled($grid){
+    const viewName = ($grid.attr('name') || '').toLowerCase();
+    return viewName.includes(CARDS_ACTIVATION_NAME.toLowerCase());
 }
 
 /*────────────────────  BUILD ALL CARDS  ────────────────────*/
