@@ -169,8 +169,9 @@ html, body {
 .grid-card-container {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-around;
-    gap: 20px;
+    justify-content: space-evenly;
+    align-items: start;
+    gap: 10px;
 }
 .grid-card {
     /* surface */
@@ -180,12 +181,12 @@ html, body {
 
     /* default elevation */
     /*box-shadow: 0 2px 3px rgba(0,0,0,.10);   slight lift */
-    box-shadow: 0px 0px 10px 1px #c0c0c0;
+    box-shadow: 10px 10px 10px 10px #c0c0c0;
     /* size / layout */
     padding: 18px 22px;
-    min-width: 250px;
+    min-width: 200px;
     max-width: 80%;
-    flex: 0 0 300px;
+    flex: 0 0 350px;
     display: flex;
     flex-direction: column;
     gap: 12px;
